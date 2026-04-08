@@ -1,4 +1,5 @@
 #[derive(Clone, Copy)]
+#[repr(u8)]
 enum Rank {
     Two,
     Three,
@@ -16,6 +17,7 @@ enum Rank {
 }
 
 #[derive(Clone, Copy)]
+#[repr(u8)]
 enum Suit {
     Hearts,
     Spades,
@@ -30,15 +32,15 @@ struct Card {
 
 impl Card {
     fn from_rank_suit(rank: Rank, suit: Suit) -> Self {
-        todo!();
+        Self { rank, suit }
     }
 
     fn to_index(&self) -> usize {
-        todo!();
+        (self.suit as usize) * 13 + (self.rank as usize)
     }
 
-    fn to_bit_index(&self) -> u64 {
-        todo!();
+    fn to_bit_mask(&self) -> u64 {
+        1u64 << ((self.suit as u8) * 13 + (self.rank as u8))
     }
 
     fn all_card_types() -> Vec<Card> {
@@ -72,28 +74,29 @@ impl Card {
     }
 }
 
-#[derive(Hash)]
+#[derive(Clone, Copy, Hash)]
 pub struct Deck(u64);
 
 impl Deck {
-    pub fn new_full() -> Self {
-        todo!();
+    pub const fn new_full() -> Self {
+        // First 52 bits set
+        Self((1u64 << 52) - 1)
     }
 
-    pub fn new_empty() -> Self {
-        Self(0)
+    pub const fn new_empty() -> Self {
+        Self(0u64)
     }
 
     fn add_card(&self, card: &Card) -> Self {
-        Self(self.0 | card.to_bit_index())
+        Self(self.0 | card.to_bit_mask())
     }
 
     fn remove_card(&self, card: &Card) -> Self {
-        Self(self.0 & !card.to_bit_index())
+        Self(self.0 & !card.to_bit_mask())
     }
 
     fn has_card(&self, card: &Card) -> bool {
-        self.0 & card.to_bit_index() > 0
+        self.0 & card.to_bit_mask() > 0
     }
 }
 
@@ -155,5 +158,35 @@ mod test {
         let new_deck = new_deck.add_card(&Card::from_rank_suit(Rank::Ten, Suit::Hearts));
 
         assert!(new_deck.has_card(&Card::from_rank_suit(Rank::Ten, Suit::Hearts)))
+    }
+
+    #[test]
+    fn remove_card_1() {
+        let new_deck = Deck::new_full();
+
+        let card = Card::from_rank_suit(Rank::Eight, Suit::Clubs);
+
+        assert!(new_deck.has_card(&card));
+
+        let new_deck = new_deck.remove_card(&card);
+
+        assert!(!new_deck.has_card(&card));
+    }
+
+    #[test]
+    fn remove_card_2() {
+        let new_deck = Deck::new_empty();
+
+        let card = Card::from_rank_suit(Rank::Queen, Suit::Diamonds);
+
+        assert!(!new_deck.has_card(&card));
+
+        let new_deck = new_deck.add_card(&card);
+
+        assert!(new_deck.has_card(&card));
+
+        let new_deck = new_deck.remove_card(&card);
+
+        assert!(!new_deck.has_card(&card));
     }
 }
