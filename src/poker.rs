@@ -1,5 +1,6 @@
 use crate::player::Player;
 
+#[derive(Hash)]
 enum PokerState {
     Init,
     FirstRound,
@@ -11,12 +12,14 @@ enum PokerState {
     FinalRound,
 }
 
+#[derive(Hash)]
 struct Players {
     players: Vec<Player>,
     current_dealer: usize,
 }
 
-struct PokerGame {
+#[derive(Hash)]
+pub struct PokerGame {
     players: Vec<Player>,
     state: PokerState,
     min_bet: u64,

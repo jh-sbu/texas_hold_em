@@ -1,6 +1,20 @@
-struct Mcts {}
+use std::collections::HashMap;
+
+use crate::poker::PokerGame;
+
+struct StateNode;
+
+struct ActionNode;
+
+struct Mcts {
+    nodes: HashMap<PokerGame, StateNode>,
+}
 
 impl Mcts {
+    pub fn from_players() -> Self {
+        todo!();
+    }
+
     pub fn new() -> Self {
         todo!();
     }
