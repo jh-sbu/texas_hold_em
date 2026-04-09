@@ -1,4 +1,6 @@
-#[derive(Clone, Copy)]
+use rand::{Rng, RngExt};
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[repr(u8)]
 enum Rank {
     Two,
@@ -16,7 +18,7 @@ enum Rank {
     Ace,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[repr(u8)]
 enum Suit {
     Hearts,
@@ -25,14 +27,60 @@ enum Suit {
     Diamonds,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 struct Card {
     rank: Rank,
     suit: Suit,
 }
 
 impl Card {
+    const ALL_RANKS: [Rank; 13] = [
+        Rank::Two,
+        Rank::Three,
+        Rank::Four,
+        Rank::Five,
+        Rank::Six,
+        Rank::Seven,
+        Rank::Eight,
+        Rank::Nine,
+        Rank::Ten,
+        Rank::Jack,
+        Rank::Queen,
+        Rank::King,
+        Rank::Ace,
+    ];
+
+    const ALL_SUITS: [Suit; 4] = [Suit::Hearts, Suit::Spades, Suit::Clubs, Suit::Diamonds];
+
     fn from_rank_suit(rank: Rank, suit: Suit) -> Self {
         Self { rank, suit }
+    }
+
+    /// Index -> Card, inverse of to_index
+    /// Cards are ordered by suit, then rank,
+    /// aces high
+    fn from_index(index: usize) -> Self {
+        assert!(
+            index < 52,
+            "You tried to get the card whose index is {}, but the highest index is 51 (52 cards but index starts at 0)",
+            index
+        );
+        let suit = index / 13;
+        let rank = index % 13;
+
+        let suit = Self::ALL_SUITS[suit];
+
+        // let suit = match suit {
+        //     0 => Suit::Hearts,
+        //     1 => Suit::Spades,
+        //     2 => Suit::Clubs,
+        //     3 => Suit::Diamonds,
+        //     _ => panic!(""),
+        // };
+
+        let rank = Self::ALL_RANKS[rank];
+
+        Card::from_rank_suit(rank, suit)
     }
 
     fn to_index(&self) -> usize {
@@ -44,28 +92,10 @@ impl Card {
     }
 
     fn all_card_types() -> Vec<Card> {
-        const ALL_RANKS: [Rank; 13] = [
-            Rank::Two,
-            Rank::Three,
-            Rank::Four,
-            Rank::Five,
-            Rank::Six,
-            Rank::Seven,
-            Rank::Eight,
-            Rank::Nine,
-            Rank::Ten,
-            Rank::Jack,
-            Rank::Queen,
-            Rank::King,
-            Rank::Ace,
-        ];
-
-        const ALL_SUITS: [Suit; 4] = [Suit::Hearts, Suit::Spades, Suit::Clubs, Suit::Diamonds];
-
         let mut card_types = Vec::<Card>::with_capacity(52);
 
-        for rank in ALL_RANKS {
-            for suit in ALL_SUITS {
+        for rank in Self::ALL_RANKS {
+            for suit in Self::ALL_SUITS {
                 card_types.push(Card::from_rank_suit(rank, suit));
             }
         }
@@ -78,9 +108,11 @@ impl Card {
 pub struct Deck(u64);
 
 impl Deck {
+    const FULL_MASK: u64 = (1u64 << 52) - 1;
+
     pub const fn new_full() -> Self {
         // First 52 bits set
-        Self((1u64 << 52) - 1)
+        Self(Self::FULL_MASK)
     }
 
     pub const fn new_empty() -> Self {
@@ -98,12 +130,25 @@ impl Deck {
     fn has_card(&self, card: &Card) -> bool {
         self.0 & card.to_bit_mask() > 0
     }
+
+    fn remove_nth_card(&self, n: usize) -> (Self, Card) {
+        todo!();
+    }
+
+    fn draw_random_card<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> (Self, Card) {
+        let number_of_ones = self.0.count_ones();
+
+        let k = rng.random_range(0usize..number_of_ones);
+
+        self.remove_nth_card(k)
+    }
 }
 
 pub type Hand = Deck;
 
 #[cfg(test)]
 mod test {
+
     use crate::deck::{Card, Deck, Hand, Rank, Suit};
 
     #[test]
@@ -188,5 +233,10 @@ mod test {
         let new_deck = new_deck.remove_card(&card);
 
         assert!(!new_deck.has_card(&card));
+    }
+
+    #[test]
+    fn draw_random_card_nonrandom() {
+        let new_deck = Deck::new_full();
     }
 }
