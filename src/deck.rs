@@ -1,4 +1,4 @@
-use rand::{Rng, RngExt};
+use rand::RngExt;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[repr(u8)]
@@ -70,14 +70,6 @@ impl Card {
 
         let suit = Self::ALL_SUITS[suit];
 
-        // let suit = match suit {
-        //     0 => Suit::Hearts,
-        //     1 => Suit::Spades,
-        //     2 => Suit::Clubs,
-        //     3 => Suit::Diamonds,
-        //     _ => panic!(""),
-        // };
-
         let rank = Self::ALL_RANKS[rank];
 
         Card::from_rank_suit(rank, suit)
@@ -104,7 +96,7 @@ impl Card {
     }
 }
 
-#[derive(Clone, Copy, Hash)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub struct Deck(u64);
 
 impl Deck {
@@ -131,14 +123,28 @@ impl Deck {
         self.0 & card.to_bit_mask() > 0
     }
 
-    fn remove_nth_card(&self, n: usize) -> (Self, Card) {
-        todo!();
+    fn remove_nth_card(&self, n: u32) -> (Self, Card) {
+        let mut i = 0;
+        let mut count = 0;
+        loop {
+            // Check the i-th bit
+            if self.0 & (1u64 << i) > 0 {
+                if count == n {
+                    let card = Card::from_index(i);
+                    return (self.remove_card(&card), card);
+                } else {
+                    count += 1;
+                }
+            }
+
+            i += 1;
+        }
     }
 
     fn draw_random_card<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> (Self, Card) {
         let number_of_ones = self.0.count_ones();
 
-        let k = rng.random_range(0usize..number_of_ones);
+        let k = rng.random_range(0..number_of_ones);
 
         self.remove_nth_card(k)
     }
@@ -148,7 +154,6 @@ pub type Hand = Deck;
 
 #[cfg(test)]
 mod test {
-
     use crate::deck::{Card, Deck, Hand, Rank, Suit};
 
     #[test]
@@ -236,7 +241,66 @@ mod test {
     }
 
     #[test]
-    fn draw_random_card_nonrandom() {
+    fn draw_random_card_nonrandom_1() {
         let new_deck = Deck::new_full();
+
+        let (deck, card) = new_deck.remove_nth_card(0);
+
+        let correct_deck = Deck(Deck::FULL_MASK - 1);
+
+        assert_eq!(deck, correct_deck);
+        assert_eq!(card, Card::from_rank_suit(Rank::Two, Suit::Hearts));
+    }
+
+    #[test]
+    fn draw_random_card_nonrandom_2() {
+        let new_deck = Deck::new_full();
+
+        let (deck, card) = new_deck.remove_nth_card(3);
+
+        let correct_deck = Deck(Deck::FULL_MASK - 8);
+
+        assert_eq!(deck, correct_deck);
+        assert_eq!(card, Card::from_rank_suit(Rank::Five, Suit::Hearts));
+    }
+
+    #[test]
+    fn draw_random_card_nonrandom_3() {
+        let new_deck = Deck::new_full();
+
+        let (deck, card) = new_deck.remove_nth_card(51);
+
+        let correct_deck = Deck(Deck::FULL_MASK - (1u64 << 51));
+
+        assert_eq!(deck, correct_deck);
+        assert_eq!(card, Card::from_rank_suit(Rank::Ace, Suit::Diamonds));
+    }
+
+    #[test]
+    fn correct_deck_card_count_1() {
+        let new_deck = Deck::new_full();
+
+        assert_eq!(new_deck.0.count_ones(), 52);
+    }
+
+    #[test]
+    fn correct_deck_card_count_2() {
+        let new_deck = Deck::new_empty();
+
+        assert_eq!(new_deck.0.count_ones(), 0);
+    }
+
+    #[test]
+    fn correct_deck_card_count_3() {
+        let (new_deck, _) = Deck::new_full().remove_nth_card(0);
+
+        assert_eq!(new_deck.0.count_ones(), 51);
+    }
+
+    #[test]
+    fn correct_deck_card_count_4() {
+        let new_deck = Deck::new_empty().add_card(&Card::from_rank_suit(Rank::Six, Suit::Spades));
+
+        assert_eq!(new_deck.0.count_ones(), 1);
     }
 }
