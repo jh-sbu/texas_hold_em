@@ -2,7 +2,7 @@ use rand::RngExt;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[repr(u8)]
-enum Rank {
+pub(crate) enum Rank {
     Two,
     Three,
     Four,
@@ -20,7 +20,7 @@ enum Rank {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[repr(u8)]
-enum Suit {
+pub(crate) enum Suit {
     Hearts,
     Spades,
     Clubs,
@@ -28,7 +28,7 @@ enum Suit {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-struct Card {
+pub(crate) struct Card {
     rank: Rank,
     suit: Suit,
 }
@@ -52,7 +52,7 @@ impl Card {
 
     const ALL_SUITS: [Suit; 4] = [Suit::Hearts, Suit::Spades, Suit::Clubs, Suit::Diamonds];
 
-    fn from_rank_suit(rank: Rank, suit: Suit) -> Self {
+    pub(crate) fn from_rank_suit(rank: Rank, suit: Suit) -> Self {
         Self { rank, suit }
     }
 
@@ -111,7 +111,7 @@ impl Deck {
         Self(0u64)
     }
 
-    fn add_card(&self, card: &Card) -> Self {
+    pub(crate) fn add_card(&self, card: &Card) -> Self {
         Self(self.0 | card.to_bit_mask())
     }
 
