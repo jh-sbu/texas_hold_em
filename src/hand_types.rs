@@ -21,6 +21,8 @@ const ACE_MASK: u64 = 0b00000000000010000000000001000000000000100000000000010000
 
 const ROYAL_MASK: u64 = ACE_MASK | KING_MASK | QUEEN_MASK | JACK_MASK | TEN_MASK;
 
+const ALL_SUITS: [u64; 4] = [HEARTS_MASK, SPADES_MASK, CLUBS_MASK, DIAMONDS_MASK];
+
 const ALL_RANKS: [u64; 13] = [
     TWO_MASK, THREE_MASK, FOUR_MASK, FIVE_MASK, SIX_MASK, SEVEN_MASK, EIGHT_MASK, NINE_MASK,
     TEN_MASK, JACK_MASK, QUEEN_MASK, KING_MASK, ACE_MASK,
@@ -34,7 +36,6 @@ pub(crate) fn is_flush(hand: &Hand) -> bool {
         | ((hand.0 & DIAMONDS_MASK).count_ones() >= 5)
 }
 
-// TODO Actually make this work
 pub(crate) fn is_royal_flush(hand: &Hand) -> bool {
     let mut hand = hand.clone();
     hand.0 = hand.0 & ROYAL_MASK;
@@ -49,15 +50,44 @@ pub(crate) fn is_royal_flush(hand: &Hand) -> bool {
 }
 
 pub(crate) fn is_straight(hand: &Hand) -> bool {
-    todo!();
+    let mut biggest_streak = 0;
+
+    for rank in ALL_RANKS {
+        if (hand.0 & rank).count_ones() > 0 {
+            biggest_streak += 1;
+        } else {
+            biggest_streak = 0;
+        }
+
+        if biggest_streak == 5 {
+            return true;
+        }
+    }
+
+    false
 }
 
 pub(crate) fn is_straight_flush(hand: &Hand) -> bool {
-    todo!();
+    for suit in ALL_SUITS {
+        let mut hand = hand.clone();
+        hand.0 &= suit;
+
+        if is_straight(&hand) {
+            return true;
+        }
+    }
+
+    false
 }
 
 pub(crate) fn is_four_of_a_kind(hand: &Hand) -> bool {
-    todo!();
+    for rank in ALL_RANKS {
+        if (hand.0 & rank).count_ones() >= 4 {
+            return true;
+        }
+    }
+
+    false
 }
 
 pub(crate) fn is_full_house(hand: &Hand) -> bool {
@@ -88,7 +118,13 @@ pub(crate) fn is_full_house(hand: &Hand) -> bool {
 }
 
 pub(crate) fn is_three_of_a_kind(hand: &Hand) -> bool {
-    todo!();
+    for rank in ALL_RANKS {
+        if (hand.0 & rank).count_ones() >= 3 {
+            return true;
+        }
+    }
+
+    false
 }
 
 pub(crate) fn is_two_pair(hand: &Hand) -> bool {
@@ -126,8 +162,9 @@ mod test {
     use crate::{
         deck::{Card, Deck, Rank, Suit},
         hand_types::{
-            CLUBS_MASK, DIAMONDS_MASK, HEARTS_MASK, SPADES_MASK, is_flush, is_full_house,
-            is_one_pair, is_royal_flush, is_straight, is_two_pair,
+            CLUBS_MASK, DIAMONDS_MASK, HEARTS_MASK, SPADES_MASK, is_flush, is_four_of_a_kind,
+            is_full_house, is_one_pair, is_royal_flush, is_straight, is_straight_flush,
+            is_three_of_a_kind, is_two_pair,
         },
     };
 
@@ -370,5 +407,101 @@ mod test {
             .add_card(&Card::from_rank_suit(Rank::Queen, Suit::Clubs));
 
         assert!(!is_full_house(&deck));
+    }
+
+    #[test]
+    fn is_three_of_a_kind_1() {
+        let deck = Deck::new_empty();
+
+        let deck = deck
+            .add_card(&Card::from_rank_suit(Rank::Two, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Hearts))
+            .add_card(&Card::from_rank_suit(Rank::Ten, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Jack, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Diamonds))
+            .add_card(&Card::from_rank_suit(Rank::Queen, Suit::Clubs));
+
+        assert!(is_three_of_a_kind(&deck));
+    }
+
+    #[test]
+    fn is_three_of_a_kind_2() {
+        let deck = Deck::new_empty();
+
+        let deck = deck
+            .add_card(&Card::from_rank_suit(Rank::Two, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Hearts))
+            .add_card(&Card::from_rank_suit(Rank::Ten, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Three, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Jack, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Diamonds))
+            .add_card(&Card::from_rank_suit(Rank::Queen, Suit::Clubs));
+
+        assert!(!is_three_of_a_kind(&deck));
+    }
+
+    #[test]
+    fn is_four_of_a_kind_1() {
+        let deck = Deck::new_empty();
+
+        let deck = deck
+            .add_card(&Card::from_rank_suit(Rank::Two, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Hearts))
+            .add_card(&Card::from_rank_suit(Rank::Ten, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Jack, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Diamonds))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Clubs));
+
+        assert!(is_four_of_a_kind(&deck));
+    }
+
+    #[test]
+    fn is_four_of_a_kind_2() {
+        let deck = Deck::new_empty();
+
+        let deck = deck
+            .add_card(&Card::from_rank_suit(Rank::Two, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Hearts))
+            .add_card(&Card::from_rank_suit(Rank::Ten, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Jack, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Diamonds))
+            .add_card(&Card::from_rank_suit(Rank::Queen, Suit::Clubs));
+
+        assert!(!is_four_of_a_kind(&deck));
+    }
+
+    #[test]
+    fn is_straight_flush_1() {
+        let deck = Deck::new_empty();
+
+        let deck = deck
+            .add_card(&Card::from_rank_suit(Rank::Two, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Three, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Five, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Six, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Diamonds))
+            .add_card(&Card::from_rank_suit(Rank::Queen, Suit::Clubs));
+
+        assert!(is_straight_flush(&deck));
+    }
+
+    #[test]
+    fn is_straight_flush_2() {
+        let deck = Deck::new_empty();
+
+        let deck = deck
+            .add_card(&Card::from_rank_suit(Rank::Two, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Three, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Hearts))
+            .add_card(&Card::from_rank_suit(Rank::Five, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Six, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Diamonds))
+            .add_card(&Card::from_rank_suit(Rank::Queen, Suit::Clubs));
+
+        assert!(!is_straight_flush(&deck));
     }
 }
