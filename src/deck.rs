@@ -97,7 +97,7 @@ impl Card {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
-pub struct Deck(u64);
+pub struct Deck(pub(crate) u64);
 
 impl Deck {
     const FULL_MASK: u64 = (1u64 << 52) - 1;
