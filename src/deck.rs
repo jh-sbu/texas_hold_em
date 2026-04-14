@@ -1,6 +1,6 @@
 use rand::RngExt;
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u8)]
 pub(crate) enum Rank {
     Two,

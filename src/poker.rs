@@ -1,4 +1,7 @@
-use crate::player::Player;
+use crate::{
+    deck::{Deck, Hand},
+    player::Player,
+};
 
 #[derive(Hash)]
 enum PokerState {
@@ -20,7 +23,9 @@ struct Players {
 
 #[derive(Hash)]
 pub struct PokerGame {
-    players: Vec<Player>,
+    players: Players,
+    dealer_hand: Hand,
+    deck: Deck,
     state: PokerState,
     min_bet: u64,
 }
