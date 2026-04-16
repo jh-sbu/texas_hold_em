@@ -303,4 +303,49 @@ mod test {
 
         assert_eq!(new_deck.0.count_ones(), 1);
     }
+
+    #[test]
+    fn from_index_1() {
+        let i = 0;
+        let c = Card::from_index(i);
+
+        assert_eq!(c.rank, Rank::Two);
+        assert_eq!(c.suit, Suit::Hearts);
+    }
+
+    #[test]
+    fn from_index_2() {
+        let i = 14;
+        let c = Card::from_index(i);
+
+        assert_eq!(c.rank, Rank::Three);
+        assert_eq!(c.suit, Suit::Spades);
+    }
+
+    #[test]
+    fn from_index_3() {
+        let i = 28;
+        let c = Card::from_index(i);
+
+        assert_eq!(c.rank, Rank::Four);
+        assert_eq!(c.suit, Suit::Clubs);
+    }
+
+    #[test]
+    fn from_index_4() {
+        let i = 43;
+        let c = Card::from_index(i);
+
+        assert_eq!(c.rank, Rank::Six);
+        assert_eq!(c.suit, Suit::Diamonds);
+    }
+
+    #[test]
+    fn from_index_5() {
+        let i = 51;
+        let c = Card::from_index(i);
+
+        assert_eq!(c.rank, Rank::Ace);
+        assert_eq!(c.suit, Suit::Diamonds);
+    }
 }

@@ -21,9 +21,9 @@ const ACE_MASK: u64 = 0b00000000000010000000000001000000000000100000000000010000
 
 const ROYAL_MASK: u64 = ACE_MASK | KING_MASK | QUEEN_MASK | JACK_MASK | TEN_MASK;
 
-const ALL_SUITS: [u64; 4] = [HEARTS_MASK, SPADES_MASK, CLUBS_MASK, DIAMONDS_MASK];
+const ALL_SUIT_MASKS: [u64; 4] = [HEARTS_MASK, SPADES_MASK, CLUBS_MASK, DIAMONDS_MASK];
 
-const ALL_RANKS: [u64; 13] = [
+const ALL_RANK_MASKS: [u64; 13] = [
     TWO_MASK, THREE_MASK, FOUR_MASK, FIVE_MASK, SIX_MASK, SEVEN_MASK, EIGHT_MASK, NINE_MASK,
     TEN_MASK, JACK_MASK, QUEEN_MASK, KING_MASK, ACE_MASK,
 ];
@@ -66,7 +66,7 @@ pub(crate) fn is_royal_flush(hand: &Hand) -> bool {
 pub(crate) fn is_straight(hand: &Hand) -> bool {
     let mut biggest_streak = 0;
 
-    for rank in ALL_RANKS {
+    for rank in ALL_RANK_MASKS {
         if (hand.0 & rank).count_ones() > 0 {
             biggest_streak += 1;
         } else {
@@ -82,7 +82,7 @@ pub(crate) fn is_straight(hand: &Hand) -> bool {
 }
 
 pub(crate) fn is_straight_flush(hand: &Hand) -> bool {
-    for suit in ALL_SUITS {
+    for suit in ALL_SUIT_MASKS {
         let mut hand = hand.clone();
         hand.0 &= suit;
 
@@ -95,7 +95,7 @@ pub(crate) fn is_straight_flush(hand: &Hand) -> bool {
 }
 
 pub(crate) fn is_four_of_a_kind(hand: &Hand) -> bool {
-    for rank in ALL_RANKS {
+    for rank in ALL_RANK_MASKS {
         if (hand.0 & rank).count_ones() >= 4 {
             return true;
         }
@@ -108,7 +108,7 @@ pub(crate) fn is_full_house(hand: &Hand) -> bool {
     let mut found_three = false;
     let mut found_two = false;
 
-    for rank in ALL_RANKS {
+    for rank in ALL_RANK_MASKS {
         match (hand.0 & rank).count_ones() {
             2 => {
                 if found_three {
@@ -132,7 +132,7 @@ pub(crate) fn is_full_house(hand: &Hand) -> bool {
 }
 
 pub(crate) fn is_three_of_a_kind(hand: &Hand) -> bool {
-    for rank in ALL_RANKS {
+    for rank in ALL_RANK_MASKS {
         if (hand.0 & rank).count_ones() >= 3 {
             return true;
         }
@@ -144,7 +144,7 @@ pub(crate) fn is_three_of_a_kind(hand: &Hand) -> bool {
 pub(crate) fn is_two_pair(hand: &Hand) -> bool {
     let mut found_first = false;
 
-    for rank in ALL_RANKS {
+    for rank in ALL_RANK_MASKS {
         if (hand.0 & rank).count_ones() >= 2 {
             if found_first {
                 return true;
@@ -162,7 +162,7 @@ pub(crate) fn is_two_pair(hand: &Hand) -> bool {
 /// Should only be called after those options
 /// have already been checked
 pub(crate) fn is_one_pair(hand: &Hand) -> bool {
-    for rank in ALL_RANKS {
+    for rank in ALL_RANK_MASKS {
         if (hand.0 & rank).count_ones() >= 2 {
             return true;
         }
@@ -172,13 +172,20 @@ pub(crate) fn is_one_pair(hand: &Hand) -> bool {
 }
 
 fn highest_card(hand: &Hand) -> Rank {
+    for suit in ALL_SUIT_MASKS {
+        todo!();
+    }
+
     todo!();
 }
 
+/// Todo! Do this correctly instead of incorrectly
 pub(crate) fn highest_hand(hand: &Hand) -> HandType {
     if is_royal_flush(hand) {
         return HandType::RoyalFlush;
     } else if is_straight_flush(hand) {
+        return HandType::StraightFlush(highest_card(hand));
+    } else if is_four_of_a_kind(hand) {
         todo!();
     }
 
