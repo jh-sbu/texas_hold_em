@@ -97,7 +97,7 @@ impl Card {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, Ord, PartialOrd)]
 pub struct Deck(pub(crate) u64);
 
 impl Deck {
