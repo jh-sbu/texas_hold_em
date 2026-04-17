@@ -34,7 +34,7 @@ pub(crate) struct Card {
 }
 
 impl Card {
-    const ALL_RANKS: [Rank; 13] = [
+    pub(crate) const ALL_RANKS: [Rank; 13] = [
         Rank::Two,
         Rank::Three,
         Rank::Four,
@@ -50,7 +50,8 @@ impl Card {
         Rank::Ace,
     ];
 
-    const ALL_SUITS: [Suit; 4] = [Suit::Hearts, Suit::Spades, Suit::Clubs, Suit::Diamonds];
+    pub(crate) const ALL_SUITS: [Suit; 4] =
+        [Suit::Hearts, Suit::Spades, Suit::Clubs, Suit::Diamonds];
 
     pub(crate) fn from_rank_suit(rank: Rank, suit: Suit) -> Self {
         Self { rank, suit }

@@ -44,6 +44,7 @@ pub(crate) enum HandType {
 
 // Two player cards and five dealer cards so >=, not ==
 pub(crate) fn is_flush(hand: &Hand) -> bool {
+    todo!();
     ((hand.0 & HEARTS_MASK).count_ones() >= 5)
         | ((hand.0 & SPADES_MASK).count_ones() >= 5)
         | ((hand.0 & CLUBS_MASK).count_ones() >= 5)
@@ -51,6 +52,7 @@ pub(crate) fn is_flush(hand: &Hand) -> bool {
 }
 
 pub(crate) fn is_royal_flush(hand: &Hand) -> bool {
+    todo!();
     let mut hand = hand.clone();
     hand.0 = hand.0 & ROYAL_MASK;
     // let hand = hand.0 & ROYAL_MASK;
@@ -63,7 +65,9 @@ pub(crate) fn is_royal_flush(hand: &Hand) -> bool {
         && is_flush(&hand)
 }
 
+/// Todo! Handle the special case of A 2 3 4 5
 pub(crate) fn is_straight(hand: &Hand) -> bool {
+    todo!();
     let mut biggest_streak = 0;
 
     for rank in ALL_RANK_MASKS {
@@ -82,6 +86,7 @@ pub(crate) fn is_straight(hand: &Hand) -> bool {
 }
 
 pub(crate) fn is_straight_flush(hand: &Hand) -> bool {
+    todo!();
     for suit in ALL_SUIT_MASKS {
         let mut hand = hand.clone();
         hand.0 &= suit;
@@ -94,100 +99,111 @@ pub(crate) fn is_straight_flush(hand: &Hand) -> bool {
     false
 }
 
-pub(crate) fn is_four_of_a_kind(hand: &Hand) -> bool {
-    for rank in ALL_RANK_MASKS {
-        if (hand.0 & rank).count_ones() >= 4 {
-            return true;
+/// 5 dealer + 2 player cards -> at most 1 4 of a kind
+pub(crate) fn is_four_of_a_kind(hand: &Hand) -> Option<HandType> {
+    for (rank_mask, rank) in ALL_RANK_MASKS.iter().zip(Card::ALL_RANKS) {
+        if (hand.0 & rank_mask).count_ones() >= 4 {
+            return Some(HandType::FourOfAKind(rank));
         }
     }
 
-    false
+    None
 }
 
-pub(crate) fn is_full_house(hand: &Hand) -> bool {
-    let mut found_three = false;
-    let mut found_two = false;
+pub(crate) fn is_full_house(hand: &Hand) -> Option<HandType> {
+    let mut found_three = None;
+    let mut found_two = None;
 
-    for rank in ALL_RANK_MASKS {
-        match (hand.0 & rank).count_ones() {
+    for (rank_mask, rank) in ALL_RANK_MASKS.iter().zip(Card::ALL_RANKS).rev() {
+        match (hand.0 & rank_mask).count_ones() {
             2 => {
-                if found_three {
-                    return true;
+                if let Some(three_rank) = found_three {
+                    return Some(HandType::FullHouse(three_rank, rank));
                 } else {
-                    found_two = true;
+                    found_two = Some(rank);
                 }
             }
             3.. => {
-                if found_two {
-                    return true;
+                if let Some(two_rank) = found_two {
+                    return Some(HandType::FullHouse(rank, two_rank));
                 } else {
-                    found_three = true;
+                    found_three = Some(rank);
                 }
             }
             _ => (),
         }
     }
 
-    return false;
+    None
 }
 
-pub(crate) fn is_three_of_a_kind(hand: &Hand) -> bool {
-    for rank in ALL_RANK_MASKS {
-        if (hand.0 & rank).count_ones() >= 3 {
-            return true;
+/// Will evaluate to Some(ThreeOfAKind) if you don't test for
+/// full house first (also test for four of a kind, in case it
+/// exists for a different rank!)
+pub(crate) fn is_three_of_a_kind(hand: &Hand) -> Option<HandType> {
+    for (rank_mask, rank) in ALL_RANK_MASKS.iter().zip(Card::ALL_RANKS).rev() {
+        if (hand.0 & rank_mask).count_ones() == 3 {
+            return Some(HandType::ThreeOfAKind(rank));
         }
     }
 
-    false
+    None
 }
 
-pub(crate) fn is_two_pair(hand: &Hand) -> bool {
-    let mut found_first = false;
+/// Will evaluate to Some(TwoPair) if you don't test for full house
+/// or three of a kind, etc. first
+pub(crate) fn is_two_pair(hand: &Hand) -> Option<HandType> {
+    let mut found_higher_pair = None;
 
-    for rank in ALL_RANK_MASKS {
-        if (hand.0 & rank).count_ones() >= 2 {
-            if found_first {
-                return true;
+    for (rank_mask, rank) in ALL_RANK_MASKS.iter().zip(Card::ALL_RANKS).rev() {
+        if (hand.0 & rank_mask).count_ones() == 2 {
+            if let Some(higher_rank) = found_higher_pair {
+                return Some(HandType::TwoPair(higher_rank, rank));
             } else {
-                found_first = true;
+                found_higher_pair = Some(rank);
             }
         }
     }
 
-    false
+    None
 }
 
-/// Even though this is called "is_one_pair" it
-/// will match on two pair, full house, etc.
-/// Should only be called after those options
-/// have already been checked
-pub(crate) fn is_one_pair(hand: &Hand) -> bool {
-    for rank in ALL_RANK_MASKS {
-        if (hand.0 & rank).count_ones() >= 2 {
-            return true;
+/// Test for higher options first!
+pub(crate) fn is_one_pair(hand: &Hand) -> Option<HandType> {
+    for (rank_mask, rank) in ALL_RANK_MASKS.iter().zip(Card::ALL_RANKS).rev() {
+        if (hand.0 & rank_mask).count_ones() == 2 {
+            return Some(HandType::OnePair(rank));
         }
     }
 
-    false
+    None
 }
 
 fn highest_card(hand: &Hand) -> Rank {
-    for suit in ALL_SUIT_MASKS {
-        todo!();
+    assert_ne!(
+        hand.0.count_ones(),
+        0,
+        "You can't find the highest card in a hand that has no cards"
+    );
+
+    for (rank_mask, rank) in ALL_RANK_MASKS.iter().zip(Card::ALL_RANKS).rev() {
+        if hand.0 & rank_mask > 0 {
+            return rank;
+        }
     }
 
-    todo!();
+    unreachable!()
 }
 
 /// Todo! Do this correctly instead of incorrectly
 pub(crate) fn highest_hand(hand: &Hand) -> HandType {
-    if is_royal_flush(hand) {
-        return HandType::RoyalFlush;
-    } else if is_straight_flush(hand) {
-        return HandType::StraightFlush(highest_card(hand));
-    } else if is_four_of_a_kind(hand) {
-        todo!();
-    }
+    // if is_royal_flush(hand) {
+    //     return HandType::RoyalFlush;
+    // } else if is_straight_flush(hand) {
+    //     return HandType::StraightFlush(highest_card(hand));
+    // } else if is_four_of_a_kind(hand) {
+    //     todo!();
+    // }
 
     todo!();
 }
@@ -361,7 +377,7 @@ mod test {
             .add_card(&Card::from_rank_suit(Rank::Four, Suit::Diamonds))
             .add_card(&Card::from_rank_suit(Rank::Queen, Suit::Clubs));
 
-        assert!(is_one_pair(&deck));
+        assert_eq!(is_one_pair(&deck), Some(HandType::OnePair(Rank::Two)));
     }
 
     #[test]
@@ -377,7 +393,7 @@ mod test {
             .add_card(&Card::from_rank_suit(Rank::Four, Suit::Diamonds))
             .add_card(&Card::from_rank_suit(Rank::Queen, Suit::Clubs));
 
-        assert!(!is_one_pair(&deck));
+        assert_eq!(is_one_pair(&deck), None);
     }
 
     #[test]
@@ -393,7 +409,10 @@ mod test {
             .add_card(&Card::from_rank_suit(Rank::Four, Suit::Diamonds))
             .add_card(&Card::from_rank_suit(Rank::Queen, Suit::Clubs));
 
-        assert!(is_two_pair(&deck));
+        assert_eq!(
+            is_two_pair(&deck),
+            Some(HandType::TwoPair(Rank::Four, Rank::Two))
+        );
     }
 
     #[test]
@@ -409,7 +428,7 @@ mod test {
             .add_card(&Card::from_rank_suit(Rank::Eight, Suit::Diamonds))
             .add_card(&Card::from_rank_suit(Rank::Queen, Suit::Clubs));
 
-        assert!(!is_two_pair(&deck));
+        assert_eq!(is_two_pair(&deck), None);
     }
 
     #[test]
@@ -425,11 +444,33 @@ mod test {
             .add_card(&Card::from_rank_suit(Rank::Eight, Suit::Diamonds))
             .add_card(&Card::from_rank_suit(Rank::Eight, Suit::Clubs));
 
-        assert!(is_full_house(&deck));
+        assert_eq!(
+            is_full_house(&deck),
+            Some(HandType::FullHouse(Rank::Eight, Rank::Two))
+        );
     }
 
     #[test]
     fn is_full_house_2() {
+        let deck = Deck::new_empty();
+
+        let deck = deck
+            .add_card(&Card::from_rank_suit(Rank::Eight, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Eight, Suit::Diamonds))
+            .add_card(&Card::from_rank_suit(Rank::Eight, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Two, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Two, Suit::Hearts))
+            .add_card(&Card::from_rank_suit(Rank::Ten, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Spades));
+
+        assert_eq!(
+            is_full_house(&deck),
+            Some(HandType::FullHouse(Rank::Eight, Rank::Two))
+        );
+    }
+
+    #[test]
+    fn is_full_house_3() {
         let deck = Deck::new_empty();
 
         let deck = deck
@@ -441,7 +482,39 @@ mod test {
             .add_card(&Card::from_rank_suit(Rank::Eight, Suit::Diamonds))
             .add_card(&Card::from_rank_suit(Rank::Queen, Suit::Clubs));
 
-        assert!(!is_full_house(&deck));
+        assert_eq!(is_full_house(&deck), None);
+    }
+
+    #[test]
+    fn is_full_house_4() {
+        let deck = Deck::new_empty();
+
+        let deck = deck
+            .add_card(&Card::from_rank_suit(Rank::Two, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Two, Suit::Hearts))
+            .add_card(&Card::from_rank_suit(Rank::Ten, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Two, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Eight, Suit::Diamonds))
+            .add_card(&Card::from_rank_suit(Rank::Queen, Suit::Clubs));
+
+        assert_eq!(is_full_house(&deck), None);
+    }
+
+    #[test]
+    fn is_full_house_5() {
+        let deck = Deck::new_empty();
+
+        let deck = deck
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Hearts))
+            .add_card(&Card::from_rank_suit(Rank::Ten, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Jack, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Diamonds))
+            .add_card(&Card::from_rank_suit(Rank::Queen, Suit::Clubs));
+
+        assert_eq!(is_full_house(&deck), None);
     }
 
     #[test]
@@ -457,11 +530,30 @@ mod test {
             .add_card(&Card::from_rank_suit(Rank::Four, Suit::Diamonds))
             .add_card(&Card::from_rank_suit(Rank::Queen, Suit::Clubs));
 
-        assert!(is_three_of_a_kind(&deck));
+        assert_eq!(
+            is_three_of_a_kind(&deck),
+            Some(HandType::ThreeOfAKind(Rank::Four))
+        );
     }
 
     #[test]
     fn is_three_of_a_kind_2() {
+        let deck = Deck::new_empty();
+
+        let deck = deck
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Hearts))
+            .add_card(&Card::from_rank_suit(Rank::Ten, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Jack, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Diamonds))
+            .add_card(&Card::from_rank_suit(Rank::Queen, Suit::Clubs));
+
+        assert_eq!(is_three_of_a_kind(&deck), None);
+    }
+
+    #[test]
+    fn is_three_of_a_kind_3() {
         let deck = Deck::new_empty();
 
         let deck = deck
@@ -473,7 +565,7 @@ mod test {
             .add_card(&Card::from_rank_suit(Rank::Four, Suit::Diamonds))
             .add_card(&Card::from_rank_suit(Rank::Queen, Suit::Clubs));
 
-        assert!(!is_three_of_a_kind(&deck));
+        assert_eq!(is_three_of_a_kind(&deck), None);
     }
 
     #[test]
@@ -489,7 +581,10 @@ mod test {
             .add_card(&Card::from_rank_suit(Rank::Four, Suit::Diamonds))
             .add_card(&Card::from_rank_suit(Rank::Four, Suit::Clubs));
 
-        assert!(is_four_of_a_kind(&deck));
+        assert_eq!(
+            is_four_of_a_kind(&deck),
+            Some(HandType::FourOfAKind(Rank::Four))
+        );
     }
 
     #[test]
@@ -505,7 +600,7 @@ mod test {
             .add_card(&Card::from_rank_suit(Rank::Four, Suit::Diamonds))
             .add_card(&Card::from_rank_suit(Rank::Queen, Suit::Clubs));
 
-        assert!(!is_four_of_a_kind(&deck));
+        assert_eq!(is_four_of_a_kind(&deck), None);
     }
 
     #[test]
@@ -625,7 +720,6 @@ mod test {
             .add_card(&Card::from_rank_suit(Rank::Jack, Suit::Hearts));
 
         assert_eq!(highest_card(&deck), Rank::King);
-        todo!();
     }
 
     #[test]
@@ -640,7 +734,6 @@ mod test {
             .add_card(&Card::from_rank_suit(Rank::Jack, Suit::Hearts));
 
         assert_eq!(highest_card(&deck), Rank::Ace);
-        todo!();
     }
 
     #[test]
@@ -655,7 +748,6 @@ mod test {
             .add_card(&Card::from_rank_suit(Rank::Jack, Suit::Hearts));
 
         assert_eq!(highest_card(&deck), Rank::Jack);
-        todo!();
     }
 
     #[test]
@@ -670,7 +762,6 @@ mod test {
             .add_card(&Card::from_rank_suit(Rank::Four, Suit::Hearts));
 
         assert_eq!(highest_card(&deck), Rank::Ten);
-        todo!();
     }
 
     #[test]
@@ -678,6 +769,5 @@ mod test {
         let deck = Deck::new_empty().add_card(&Card::from_rank_suit(Rank::Two, Suit::Hearts));
 
         assert_eq!(highest_card(&deck), Rank::Two);
-        todo!();
     }
 }
