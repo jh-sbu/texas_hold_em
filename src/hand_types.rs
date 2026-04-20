@@ -34,7 +34,7 @@ pub(crate) enum HandType {
     StraightFlush(Rank),
     FourOfAKind(Rank),
     FullHouse(Rank, Rank),
-    Flush(Hand),
+    Flush,
     Straight(Rank),
     ThreeOfAKind(Rank),
     TwoPair(Rank, Rank),
@@ -51,25 +51,21 @@ pub(crate) fn is_flush(hand: &Hand) -> Option<HandType> {
         hand.0 &= suit_mask;
 
         if hand.0.count_ones() >= 5 {
-            return Some(something);
+            return Some(HandType::Flush);
         }
     }
 
     None
 }
 
-pub(crate) fn is_royal_flush(hand: &Hand) -> bool {
-    todo!();
-    let mut hand = hand.clone();
-    // hand.0 = hand.0 & ROYAL_MASK;
-    // let hand = hand.0 & ROYAL_MASK;
-
-    // ((hand.0 & ACE_MASK).count_ones() >= 1)
-    //     && ((hand.0 & KING_MASK).count_ones() >= 1)
-    //     && ((hand.0 & QUEEN_MASK).count_ones() >= 1)
-    //     && ((hand.0 & JACK_MASK).count_ones() >= 1)
-    //     && ((hand.0 & TEN_MASK).count_ones() >= 1)
-    //     && is_flush(&hand)
+pub(crate) fn is_royal_flush(hand: &Hand) -> Option<HandType> {
+    if let Some(_) = is_straight_flush(hand)
+        && (hand.0 & ACE_MASK).count_ones() > 0
+    {
+        Some(HandType::RoyalFlush)
+    } else {
+        None
+    }
 }
 
 pub(crate) fn is_straight(hand: &Hand) -> Option<HandType> {
@@ -184,7 +180,7 @@ pub(crate) fn is_one_pair(hand: &Hand) -> Option<HandType> {
     None
 }
 
-fn highest_card(hand: &Hand) -> Rank {
+fn highest_card(hand: &Hand) -> HandType {
     assert_ne!(
         hand.0.count_ones(),
         0,
@@ -193,24 +189,42 @@ fn highest_card(hand: &Hand) -> Rank {
 
     for (rank_mask, rank) in ALL_RANK_MASKS.iter().zip(Card::ALL_RANKS).rev() {
         if hand.0 & rank_mask > 0 {
-            return rank;
+            return HandType::HighCard(rank);
         }
     }
 
     unreachable!()
 }
 
+fn compare_high(hand_1: &Hand, hand_2: &Hand) -> u8 {
+    todo!();
+}
+
 /// Todo! Do this correctly instead of incorrectly
 pub(crate) fn highest_hand(hand: &Hand) -> HandType {
-    // if is_royal_flush(hand) {
-    //     return HandType::RoyalFlush;
-    // } else if is_straight_flush(hand) {
-    //     return HandType::StraightFlush(highest_card(hand));
-    // } else if is_four_of_a_kind(hand) {
-    //     todo!();
-    // }
-
-    todo!();
+    [
+        is_royal_flush,
+        is_four_of_a_kind,
+        is_full_house,
+        is_flush,
+        is_straight,
+        is_three_of_a_kind,
+        is_two_pair,
+        is_one_pair,
+    ]
+    .into_iter()
+    .find_map(|func| func(hand))
+    .unwrap_or_else(|| highest_card(hand))
+    // is_royal_flush(hand)
+    //     .or_else(|| is_straight_flush(hand))
+    //     .or_else(|| is_four_of_a_kind(hand))
+    //     .or_else(|| is_full_house(hand))
+    //     .or_else(|| is_flush(hand))
+    //     .or_else(|| is_straight(hand))
+    //     .or_else(|| is_three_of_a_kind(hand))
+    //     .or_else(|| is_two_pair(hand))
+    //     .or_else(|| is_one_pair(hand))
+    //     .unwrap_or_else(|| HandType::HighCard(highest_card(hand)))
 }
 
 #[cfg(test)]
@@ -218,9 +232,11 @@ mod test {
     use crate::{
         deck::{Card, Deck, Rank, Suit},
         hand_types::{
-            CLUBS_MASK, DIAMONDS_MASK, HEARTS_MASK, HandType, SPADES_MASK, highest_card,
-            highest_hand, is_flush, is_four_of_a_kind, is_full_house, is_one_pair, is_royal_flush,
-            is_straight, is_straight_flush, is_three_of_a_kind, is_two_pair,
+            ACE_MASK, CLUBS_MASK, DIAMONDS_MASK, EIGHT_MASK, FIVE_MASK, FOUR_MASK, HEARTS_MASK,
+            HandType, JACK_MASK, KING_MASK, NINE_MASK, QUEEN_MASK, SEVEN_MASK, SIX_MASK,
+            SPADES_MASK, TEN_MASK, THREE_MASK, TWO_MASK, highest_card, highest_hand, is_flush,
+            is_four_of_a_kind, is_full_house, is_one_pair, is_royal_flush, is_straight,
+            is_straight_flush, is_three_of_a_kind, is_two_pair,
         },
     };
 
@@ -253,6 +269,92 @@ mod test {
     }
 
     #[test]
+    fn check_constants_6() {
+        assert_eq!(TWO_MASK.count_ones(), 4);
+    }
+
+    #[test]
+    fn check_constants_7() {
+        assert_eq!(THREE_MASK.count_ones(), 4);
+    }
+
+    #[test]
+    fn check_constants_8() {
+        assert_eq!(FOUR_MASK.count_ones(), 4);
+    }
+
+    #[test]
+    fn check_constants_9() {
+        assert_eq!(FIVE_MASK.count_ones(), 4);
+    }
+
+    #[test]
+    fn check_constants_10() {
+        assert_eq!(SIX_MASK.count_ones(), 4);
+    }
+
+    #[test]
+    fn check_constants_11() {
+        assert_eq!(SEVEN_MASK.count_ones(), 4);
+    }
+
+    #[test]
+    fn check_constants_12() {
+        assert_eq!(EIGHT_MASK.count_ones(), 4);
+    }
+
+    #[test]
+    fn check_constants_13() {
+        assert_eq!(NINE_MASK.count_ones(), 4);
+    }
+
+    #[test]
+    fn check_constants_14() {
+        assert_eq!(TEN_MASK.count_ones(), 4);
+    }
+
+    #[test]
+    fn check_constants_15() {
+        assert_eq!(JACK_MASK.count_ones(), 4);
+    }
+
+    #[test]
+    fn check_constants_16() {
+        assert_eq!(QUEEN_MASK.count_ones(), 4);
+    }
+
+    #[test]
+    fn check_constants_17() {
+        assert_eq!(KING_MASK.count_ones(), 4);
+    }
+
+    #[test]
+    fn check_constants_18() {
+        assert_eq!(ACE_MASK.count_ones(), 4);
+    }
+
+    #[test]
+    fn check_constants_19() {
+        assert_eq!(
+            (TWO_MASK
+                | THREE_MASK
+                | FOUR_MASK
+                | FIVE_MASK
+                | SIX_MASK
+                | SEVEN_MASK
+                | EIGHT_MASK
+                | NINE_MASK
+                | TEN_MASK
+                | JACK_MASK
+                | QUEEN_MASK
+                | KING_MASK
+                | ACE_MASK)
+                .count_ones(),
+            52
+        )
+    }
+
+    #[test]
     fn is_flush_1() {
         let deck = Deck::new_empty();
 
@@ -263,7 +365,7 @@ mod test {
             .add_card(&Card::from_rank_suit(Rank::Ace, Suit::Hearts))
             .add_card(&Card::from_rank_suit(Rank::Three, Suit::Hearts));
 
-        assert_eq!(is_flush(&deck), Some(HandType::Flush(Rank::Ace)));
+        assert_eq!(is_flush(&deck), Some(HandType::Flush));
     }
 
     #[test]
@@ -304,7 +406,7 @@ mod test {
             .add_card(&Card::from_rank_suit(Rank::Jack, Suit::Spades))
             .add_card(&Card::from_rank_suit(Rank::Ten, Suit::Spades));
 
-        assert!(is_royal_flush(&deck));
+        assert_eq!(is_royal_flush(&deck), Some(HandType::RoyalFlush));
     }
 
     #[test]
@@ -318,7 +420,7 @@ mod test {
             .add_card(&Card::from_rank_suit(Rank::Jack, Suit::Spades))
             .add_card(&Card::from_rank_suit(Rank::Ten, Suit::Hearts));
 
-        assert!(!is_royal_flush(&deck));
+        assert_eq!(is_royal_flush(&deck), None);
     }
 
     #[test]
@@ -334,7 +436,7 @@ mod test {
             .add_card(&Card::from_rank_suit(Rank::Ten, Suit::Hearts))
             .add_card(&Card::from_rank_suit(Rank::Nine, Suit::Spades));
 
-        assert!(!is_royal_flush(&deck));
+        assert_eq!(is_royal_flush(&deck), None);
     }
 
     #[test]
@@ -766,7 +868,7 @@ mod test {
             .add_card(&Card::from_rank_suit(Rank::Jack, Suit::Clubs))
             .add_card(&Card::from_rank_suit(Rank::Jack, Suit::Hearts));
 
-        assert_eq!(highest_hand(&deck), HandType::OnePair(Rank::Seven));
+        assert_eq!(highest_hand(&deck), HandType::OnePair(Rank::Jack));
     }
 
     #[test]
@@ -797,7 +899,7 @@ mod test {
             .add_card(&Card::from_rank_suit(Rank::Jack, Suit::Clubs))
             .add_card(&Card::from_rank_suit(Rank::Jack, Suit::Hearts));
 
-        assert_eq!(highest_card(&deck), Rank::King);
+        assert_eq!(highest_card(&deck), HandType::HighCard(Rank::King));
     }
 
     #[test]
@@ -811,7 +913,7 @@ mod test {
             .add_card(&Card::from_rank_suit(Rank::Jack, Suit::Clubs))
             .add_card(&Card::from_rank_suit(Rank::Jack, Suit::Hearts));
 
-        assert_eq!(highest_card(&deck), Rank::Ace);
+        assert_eq!(highest_card(&deck), HandType::HighCard(Rank::Ace));
     }
 
     #[test]
@@ -825,7 +927,7 @@ mod test {
             .add_card(&Card::from_rank_suit(Rank::Jack, Suit::Clubs))
             .add_card(&Card::from_rank_suit(Rank::Jack, Suit::Hearts));
 
-        assert_eq!(highest_card(&deck), Rank::Jack);
+        assert_eq!(highest_card(&deck), HandType::HighCard(Rank::Jack));
     }
 
     #[test]
@@ -839,13 +941,35 @@ mod test {
             .add_card(&Card::from_rank_suit(Rank::Three, Suit::Clubs))
             .add_card(&Card::from_rank_suit(Rank::Four, Suit::Hearts));
 
-        assert_eq!(highest_card(&deck), Rank::Ten);
+        assert_eq!(highest_card(&deck), HandType::HighCard(Rank::Ten));
     }
 
     #[test]
     fn highest_card_5() {
         let deck = Deck::new_empty().add_card(&Card::from_rank_suit(Rank::Two, Suit::Hearts));
 
-        assert_eq!(highest_card(&deck), Rank::Two);
+        assert_eq!(highest_card(&deck), HandType::HighCard(Rank::Two));
+    }
+
+    #[test]
+    fn highest_hand_1() {
+        let deck = Deck::new_empty()
+            .add_card(&Card::from_rank_suit(Rank::Ten, Suit::Hearts))
+            .add_card(&Card::from_rank_suit(Rank::Seven, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Eight, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Seven, Suit::Diamonds))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Three, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Hearts));
+
+        assert_eq!(
+            highest_hand(&deck),
+            HandType::TwoPair(Rank::Seven, Rank::Four)
+        );
+    }
+
+    #[test]
+    fn highest_hand_2() {
+        todo!();
     }
 }
