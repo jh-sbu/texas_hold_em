@@ -952,7 +952,125 @@ mod test {
     }
 
     #[test]
-    fn highest_hand_1() {
+    fn highest_hand_straight_flush_1() {
+        let deck = Deck::new_empty()
+            .add_card(&Card::from_rank_suit(Rank::Eight, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Ace, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Ace, Suit::Diamonds))
+            .add_card(&Card::from_rank_suit(Rank::Six, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Seven, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Five, Suit::Clubs));
+
+        assert_eq!(highest_hand(&deck), HandType::StraightFlush(Rank::Eight));
+    }
+
+    #[test]
+    fn highest_hand_straight_flush_2() {
+        let deck = Deck::new_empty()
+            .add_card(&Card::from_rank_suit(Rank::Eight, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::King, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Queen, Suit::Diamonds))
+            .add_card(&Card::from_rank_suit(Rank::Six, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Seven, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Five, Suit::Clubs));
+
+        assert_eq!(highest_hand(&deck), HandType::StraightFlush(Rank::Eight));
+    }
+
+    #[test]
+    fn highest_hand_four_of_a_kind_1() {
+        let deck = Deck::new_empty()
+            .add_card(&Card::from_rank_suit(Rank::Ten, Suit::Hearts))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Eight, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Diamonds))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Three, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Hearts));
+
+        assert_eq!(highest_hand(&deck), HandType::FourOfAKind(Rank::Four));
+    }
+
+    #[test]
+    fn highest_hand_full_house_1() {
+        let deck = Deck::new_empty()
+            .add_card(&Card::from_rank_suit(Rank::Ten, Suit::Hearts))
+            .add_card(&Card::from_rank_suit(Rank::Seven, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Seven, Suit::Diamonds))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Three, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Hearts));
+
+        assert_eq!(
+            highest_hand(&deck),
+            HandType::FullHouse(Rank::Four, Rank::Seven)
+        );
+    }
+
+    #[test]
+    fn highest_hand_flush_1() {
+        let deck = Deck::new_empty()
+            .add_card(&Card::from_rank_suit(Rank::Queen, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Six, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Five, Suit::Diamonds))
+            .add_card(&Card::from_rank_suit(Rank::Six, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::King, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Five, Suit::Clubs));
+
+        assert_eq!(highest_hand(&deck), HandType::Flush);
+    }
+
+    #[test]
+    fn highest_hand_straight_1() {
+        let deck = Deck::new_empty()
+            .add_card(&Card::from_rank_suit(Rank::Ten, Suit::Hearts))
+            .add_card(&Card::from_rank_suit(Rank::Seven, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Five, Suit::Diamonds))
+            .add_card(&Card::from_rank_suit(Rank::Six, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Eight, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Hearts));
+
+        assert_eq!(highest_hand(&deck), HandType::Straight(Rank::Eight));
+    }
+
+    #[test]
+    fn highest_hand_three_of_a_kind_1() {
+        let deck = Deck::new_empty()
+            .add_card(&Card::from_rank_suit(Rank::Ten, Suit::Hearts))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Eight, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Seven, Suit::Diamonds))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Three, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Hearts));
+
+        assert_eq!(highest_hand(&deck), HandType::ThreeOfAKind(Rank::Four));
+    }
+
+    #[test]
+    fn highest_hand_two_pair_1() {
+        let deck = Deck::new_empty()
+            .add_card(&Card::from_rank_suit(Rank::Ten, Suit::Hearts))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Eight, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Ten, Suit::Diamonds))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Three, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Eight, Suit::Hearts));
+
+        assert_eq!(
+            highest_hand(&deck),
+            HandType::TwoPair(Rank::Ten, Rank::Eight)
+        );
+    }
+
+    #[test]
+    fn highest_hand_two_pair_2() {
         let deck = Deck::new_empty()
             .add_card(&Card::from_rank_suit(Rank::Ten, Suit::Hearts))
             .add_card(&Card::from_rank_suit(Rank::Seven, Suit::Spades))
@@ -969,7 +1087,35 @@ mod test {
     }
 
     #[test]
-    fn highest_hand_2() {
+    fn highest_hand_one_pair_1() {
+        let deck = Deck::new_empty()
+            .add_card(&Card::from_rank_suit(Rank::Ten, Suit::Hearts))
+            .add_card(&Card::from_rank_suit(Rank::Two, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Eight, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Nine, Suit::Diamonds))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Three, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Eight, Suit::Hearts));
+
+        assert_eq!(highest_hand(&deck), HandType::OnePair(Rank::Eight));
+    }
+
+    #[test]
+    fn highest_hand_high_card_1() {
+        let deck = Deck::new_empty()
+            .add_card(&Card::from_rank_suit(Rank::Ten, Suit::Hearts))
+            .add_card(&Card::from_rank_suit(Rank::Two, Suit::Spades))
+            .add_card(&Card::from_rank_suit(Rank::Eight, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Nine, Suit::Diamonds))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Three, Suit::Clubs))
+            .add_card(&Card::from_rank_suit(Rank::Seven, Suit::Hearts));
+
+        assert_eq!(highest_hand(&deck), HandType::HighCard(Rank::Ten));
+    }
+
+    #[test]
+    fn highest_hand_6() {
         todo!();
     }
 }

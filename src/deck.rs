@@ -113,6 +113,12 @@ impl Deck {
     }
 
     pub(crate) fn add_card(&self, card: &Card) -> Self {
+        debug_assert_eq!(
+            self.0 & card.to_bit_mask(),
+            0,
+            "Tried to add card {:?} to a deck it was already present in",
+            card
+        );
         Self(self.0 | card.to_bit_mask())
     }
 
