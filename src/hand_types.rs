@@ -59,8 +59,8 @@ pub(crate) fn is_flush(hand: &Hand) -> Option<HandType> {
 }
 
 pub(crate) fn is_royal_flush(hand: &Hand) -> Option<HandType> {
-    if let Some(_) = is_straight_flush(hand)
-        && (hand.0 & ACE_MASK).count_ones() > 0
+    if let Some(HandType::StraightFlush(rank)) = is_straight_flush(hand)
+        && rank == Rank::Ace
     {
         Some(HandType::RoyalFlush)
     } else {
@@ -72,16 +72,19 @@ pub(crate) fn is_straight(hand: &Hand) -> Option<HandType> {
     // Special handling for ace low
     let mut biggest_streak = if (hand.0 & ACE_MASK) > 0 { 1 } else { 0 };
 
-    for (rank_mask, rank) in ALL_RANK_MASKS.iter().zip(Card::ALL_RANKS) {
+    for (i, rank_mask) in ALL_RANK_MASKS.iter().enumerate() {
         if (hand.0 & rank_mask).count_ones() > 0 {
             biggest_streak += 1;
+        } else if biggest_streak >= 5 {
+            // Fine to subtract here since biggest_streak >= 5 => i > 0 and i - 1 <= .len() - 1
+            return Some(HandType::Straight(Card::ALL_RANKS[i - 1]));
         } else {
             biggest_streak = 0;
         }
+    }
 
-        if biggest_streak == 5 {
-            return Some(HandType::Straight(rank));
-        }
+    if biggest_streak >= 5 {
+        return Some(HandType::Straight(Rank::Ace));
     }
 
     None
@@ -204,6 +207,7 @@ fn compare_high(hand_1: &Hand, hand_2: &Hand) -> u8 {
 pub(crate) fn highest_hand(hand: &Hand) -> HandType {
     [
         is_royal_flush,
+        is_straight_flush,
         is_four_of_a_kind,
         is_full_house,
         is_flush,
@@ -215,16 +219,6 @@ pub(crate) fn highest_hand(hand: &Hand) -> HandType {
     .into_iter()
     .find_map(|func| func(hand))
     .unwrap_or_else(|| highest_card(hand))
-    // is_royal_flush(hand)
-    //     .or_else(|| is_straight_flush(hand))
-    //     .or_else(|| is_four_of_a_kind(hand))
-    //     .or_else(|| is_full_house(hand))
-    //     .or_else(|| is_flush(hand))
-    //     .or_else(|| is_straight(hand))
-    //     .or_else(|| is_three_of_a_kind(hand))
-    //     .or_else(|| is_two_pair(hand))
-    //     .or_else(|| is_one_pair(hand))
-    //     .unwrap_or_else(|| HandType::HighCard(highest_card(hand)))
 }
 
 #[cfg(test)]
@@ -501,6 +495,22 @@ mod test {
             .add_card(&Card::from_rank_suit(Rank::Six, Suit::Hearts));
 
         assert_eq!(is_straight(&deck), None);
+    }
+
+    #[test]
+    fn is_straight_5() {
+        let deck = Deck::new_empty();
+
+        let deck = deck
+            .add_card(&Card::from_rank_suit(Rank::Ace, Suit::Hearts))
+            .add_card(&Card::from_rank_suit(Rank::Two, Suit::Hearts))
+            .add_card(&Card::from_rank_suit(Rank::Three, Suit::Hearts))
+            .add_card(&Card::from_rank_suit(Rank::Four, Suit::Hearts))
+            .add_card(&Card::from_rank_suit(Rank::Five, Suit::Hearts))
+            .add_card(&Card::from_rank_suit(Rank::Six, Suit::Hearts))
+            .add_card(&Card::from_rank_suit(Rank::Seven, Suit::Hearts));
+
+        assert_eq!(is_straight(&deck), Some(HandType::Straight(Rank::Seven)));
     }
 
     #[test]
@@ -1112,10 +1122,5 @@ mod test {
             .add_card(&Card::from_rank_suit(Rank::Seven, Suit::Hearts));
 
         assert_eq!(highest_hand(&deck), HandType::HighCard(Rank::Ten));
-    }
-
-    #[test]
-    fn highest_hand_6() {
-        todo!();
     }
 }
