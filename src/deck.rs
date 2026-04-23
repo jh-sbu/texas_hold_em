@@ -122,7 +122,7 @@ impl Deck {
         Self(self.0 | card.to_bit_mask())
     }
 
-    fn remove_card(&self, card: &Card) -> Self {
+    pub(crate) fn remove_card(&self, card: &Card) -> Self {
         Self(self.0 & !card.to_bit_mask())
     }
 
@@ -148,12 +148,22 @@ impl Deck {
         }
     }
 
-    fn draw_random_card<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> (Self, Card) {
+    pub(crate) fn draw_random_card<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> (Self, Card) {
         let number_of_ones = self.0.count_ones();
 
         let k = rng.random_range(0..number_of_ones);
 
         self.remove_nth_card(k)
+    }
+
+    pub(crate) fn draw_card_to_hand<R: rand::Rng + ?Sized>(
+        &self,
+        hand: &Hand,
+        rng: &mut R,
+    ) -> (Self, Hand) {
+        let (new_deck, new_card) = self.draw_random_card(rng);
+
+        (new_deck, Deck(hand.0 | new_card.to_bit_mask()))
     }
 }
 
@@ -281,6 +291,30 @@ mod test {
 
         assert_eq!(deck, correct_deck);
         assert_eq!(card, Card::from_rank_suit(Rank::Ace, Suit::Diamonds));
+    }
+
+    #[test]
+    fn draw_random_card_random_1() {
+        let new_deck = Deck::new_full();
+
+        let mut rng = rand::rng();
+
+        let (deck, _) = new_deck.draw_random_card(&mut rng);
+        assert_eq!(deck.0.count_ones(), 51);
+    }
+
+    #[test]
+    fn draw_random_card_random_multiple_1() {
+        let mut rng = rand::rng();
+
+        let new_deck = Deck::new_full();
+
+        let (deck, _) = new_deck.draw_random_card(&mut rng);
+        let (deck, _) = deck.draw_random_card(&mut rng);
+        let (deck, _) = deck.draw_random_card(&mut rng);
+        let (deck, _) = deck.draw_random_card(&mut rng);
+        let (deck, _) = deck.draw_random_card(&mut rng);
+        assert_eq!(deck.0.count_ones(), 47);
     }
 
     #[test]
