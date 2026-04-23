@@ -17,7 +17,7 @@ enum PokerState {
     TurnRound,
     River,
     RiverRound,
-    GameOver,
+    GameOver(Vec<Player>),
 }
 
 #[derive(Hash)]
@@ -127,14 +127,7 @@ impl PokerGame {
             PokerState::TurnRound => todo!(),
             PokerState::River => self.river(),
             PokerState::RiverRound => todo!(),
-            PokerState::GameOver => todo!(),
+            PokerState::GameOver(_) => todo!(),
         }
-    }
-
-    pub fn get_winners(&self) -> Vec<Player> {
-        debug_assert_eq!(self.state, PokerState::GameOver);
-
-        // let player_hand_values = self.players.iter().map(|player| player)
-        todo!();
     }
 }

@@ -1,12 +1,12 @@
 use crate::{deck::Hand, hand_types::HandType};
 
-#[derive(Hash)]
+#[derive(Debug, Hash, Eq, PartialEq)]
 enum PlayerState {
     Playing(Hand),
     Folded,
 }
 
-#[derive(Hash)]
+#[derive(Debug, Hash, Eq, PartialEq)]
 pub struct Player {
     pub(crate) state: PlayerState,
     money: u64,
