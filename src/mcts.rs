@@ -1,17 +1,39 @@
 use std::collections::HashMap;
 
-use crate::poker::PokerGame;
+use crate::{deck::Hand, player::Player, poker::PokerGame};
 
-struct StateNode;
+struct StateNode {
+    call: ActionNode,
+    fold: ActionNode,
+    raise: ActionNode,
+    all_in: ActionNode,
+}
 
-struct ActionNode;
+struct ActionNode {
+    value: f64,
+    n: f64,
+}
 
-struct Mcts {
+pub struct Mcts {
     nodes: HashMap<PokerGame, StateNode>,
+    players: Vec<Player>,
+    dealer: usize,
 }
 
 impl Mcts {
-    pub fn from_players() -> Self {
+    pub fn from_players_and_dealer(players: Vec<Player>, dealer: usize) -> Self {
+        Self {
+            nodes: HashMap::new(),
+            players,
+            dealer,
+        }
+    }
+
+    fn rollout(&mut self) {
+        let game = PokerGame::from_players_and_dealer(self.players.clone(), self.dealer);
+
+        game.step();
+
         todo!();
     }
 
@@ -19,15 +41,15 @@ impl Mcts {
         todo!();
     }
 
-    pub fn selection(&self) -> Self {
+    pub fn selection(&self) {
         todo!();
     }
 
-    pub fn expansion(&self) -> Self {
+    pub fn expansion(&self) {
         todo!();
     }
 
-    pub fn backprop(&self) -> Self {
+    pub fn backprop(&self) {
         todo!();
     }
 }

@@ -1,6 +1,7 @@
 use crate::{
     deck::{Deck, Hand},
-    player::Player,
+    hand_types::HandType,
+    player::{Player, PlayerState},
 };
 
 const MIN_BET_TEMP: u64 = 80;
@@ -31,6 +32,27 @@ pub struct PokerGame {
 }
 
 impl PokerGame {
+    pub fn from_players_and_dealer(players: Vec<Player>, dealer: usize) -> Self {
+        let mut deck = Deck::new_full();
+
+        let _ = players.iter().map(|player| {
+            if let PlayerState::Playing(hand) = player.state {
+                deck.0 &= !hand.0;
+            }
+        });
+
+        // todo!();
+
+        Self {
+            players,
+            dealer,
+            dealer_hand: Hand::new_empty(),
+            deck,
+            state: PokerState::RiverRound,
+            min_bet: MIN_BET_TEMP,
+        }
+    }
+
     pub fn from_hands_money_and_dealer(hands: Vec<Hand>, money: u64, dealer: usize) -> PokerGame {
         let players = hands
             .iter()
@@ -52,7 +74,7 @@ impl PokerGame {
     }
 
     // Move three cards from the deck to the dealer hand
-    pub fn flop(self) -> PokerGame {
+    pub fn flop(&self) -> PokerGame {
         // let new_cards = Hand::new_empty();
 
         let mut rng = rand::rng();
@@ -65,19 +87,8 @@ impl PokerGame {
                 (deck, dealer_hand)
             });
 
-        // let dealer_hand = Hand::new_empty();
-        //
-        // let (deck, new_dealer_card) = self.deck.draw_random_card(&mut rng);
-        // let dealer_hand = dealer_hand.add_card(&new_dealer_card);
-        //
-        // let (deck, new_dealer_card) = deck.draw_random_card(&mut rng);
-        // let dealer_hand = dealer_hand.add_card(&new_dealer_card);
-        //
-        // let (deck, new_dealer_card) = deck.draw_random_card(&mut rng);
-        // let dealer_hand = dealer_hand.add_card(&new_dealer_card);
-
         PokerGame {
-            players: self.players,
+            players: self.players.clone(),
             dealer: self.dealer,
             dealer_hand,
             deck,
@@ -86,14 +97,14 @@ impl PokerGame {
         }
     }
 
-    pub fn turn(self) -> PokerGame {
+    pub fn turn(&self) -> PokerGame {
         let mut rng = rand::rng();
 
         let (deck, new_dealer_card) = self.deck.draw_random_card(&mut rng);
         let dealer_hand = self.dealer_hand.add_card(&new_dealer_card);
 
         PokerGame {
-            players: self.players,
+            players: self.players.clone(),
             dealer: self.dealer,
             dealer_hand,
             deck,
@@ -102,14 +113,14 @@ impl PokerGame {
         }
     }
 
-    pub fn river(self) -> PokerGame {
+    pub fn river(&self) -> PokerGame {
         let mut rng = rand::rng();
 
         let (deck, new_dealer_card) = self.deck.draw_random_card(&mut rng);
         let dealer_hand = self.dealer_hand.add_card(&new_dealer_card);
 
         PokerGame {
-            players: self.players,
+            players: self.players.clone(),
             dealer: self.dealer,
             dealer_hand,
             deck,

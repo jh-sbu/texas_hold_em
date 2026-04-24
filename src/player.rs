@@ -1,12 +1,12 @@
 use crate::{deck::Hand, hand_types::HandType};
 
-#[derive(Debug, Hash, Eq, PartialEq)]
-enum PlayerState {
+#[derive(Clone, Debug, Hash, Eq, PartialEq)]
+pub(crate) enum PlayerState {
     Playing(Hand),
     Folded,
 }
 
-#[derive(Debug, Hash, Eq, PartialEq)]
+#[derive(Clone, Debug, Hash, Eq, PartialEq)]
 pub struct Player {
     pub(crate) state: PlayerState,
     money: u64,
@@ -15,10 +15,6 @@ pub struct Player {
 impl Player {
     // Straddles are out of scope so ignore anything
     // before hands are dealt
-    // pub fn from_money(money: u64) -> Self {
-    //     todo!();
-    // }
-
     pub(crate) fn from_money_and_hand(money: u64, hand: &Hand) -> Self {
         Self {
             state: PlayerState::Playing(*hand),
