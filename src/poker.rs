@@ -1,6 +1,5 @@
 use crate::{
     deck::{Deck, Hand},
-    hand_types::HandType,
     player::{Player, PlayerState},
 };
 
@@ -29,6 +28,13 @@ pub struct PokerGame {
     deck: Deck,
     state: PokerState,
     min_bet: u64,
+}
+
+pub(crate) enum Action {
+    Fold,
+    Call,
+    Raise,
+    AllIn,
 }
 
 impl PokerGame {

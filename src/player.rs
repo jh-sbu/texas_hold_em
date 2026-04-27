@@ -12,6 +12,14 @@ pub struct Player {
     money: u64,
 }
 
+#[derive(Clone, Copy)]
+pub(crate) enum PlayerAction {
+    Fold,
+    Call,
+    Raise,
+    AllIn,
+}
+
 impl Player {
     // Straddles are out of scope so ignore anything
     // before hands are dealt
